@@ -3,6 +3,13 @@ using NUnit.Framework;
 using VCSVersion.Configuration;
 using VCSVersion.VersionCalculation;
 using System.Text;
+using HgVersion;
+using HgVersion.VCS;
+using VCSVersion.VersionCalculation.BaseVersionCalculation;
+using VCSVersion;
+using Mercurial;
+using System.IO;
+using System.Linq;
 
 namespace HgVersionTests.IntegrationTests
 {
@@ -16,6 +23,19 @@ namespace HgVersionTests.IntegrationTests
                 if (Encoding.Default == Encoding.GetEncoding("Windows-1251"))
                 {
                     yield return "ветка";
+                }
+            }
+
+        }
+
+        private static IEnumerable<string> BigRepoPaths
+        {
+            get
+            {
+                var path = @"C:\users\artem\projects\ogre";
+                if (Directory.Exists(path))
+                {
+                    yield return path;
                 }
             }
 
@@ -187,6 +207,24 @@ namespace HgVersionTests.IntegrationTests
 
             }
         }
+
+        [Test]
+        [TestCaseSource(nameof(BigRepoPaths))]
+        public void TestVersionCalculationOnBigRepository(string path)
+        {
+            using (var repository = new Repository(path))
+            {
+                var versionContext = new HgVersionContext(((HgRepository)repository));
+
+                var finder = new VersionFinder(
+                    new BaseVersionCalculator(
+                        versionContext.Configuration.BaseVersionStrategies.ToArray()
+                        )
+                );
+                finder.FindVersion(versionContext);
+            }
+        }
+
 
         //        [Test]
         //        public void WhenDevelopBranchedFromMasterDetachedHead_MinorIsIncreased()

@@ -3,6 +3,7 @@ using System.Linq;
 using VCSVersion.AssemblyVersioning;
 using VCSVersion.Configuration;
 using VCSVersion.VersionCalculation;
+using VCSVersion.VersionCalculation.BaseVersionCalculation;
 using VCSVersion.VersionCalculation.IncrementStrategies;
 using VCSVersion.VersionCalculation.VersionFilters;
 
@@ -32,6 +33,7 @@ namespace HgVersionTests.Configuration
             int buildMetaDataPadding = 4,
             int commitsSinceVersionSourcePadding = 4,
             IEnumerable<IVersionFilter> versionFilters = null,
+            IEnumerable<IBaseVersionStrategy> baseVersionStrategies = null,
             bool tracksReleaseBranches = false,
             bool isRelease = false,
             string commitDateFormat = "yyyy-MM-dd") :
@@ -41,6 +43,8 @@ namespace HgVersionTests.Configuration
                     majorMessage, minorMessage, patchMessage, noBumpMessage,
                     commitMessageMode, buildMetaDataPadding, commitsSinceVersionSourcePadding,
                     versionFilters ?? Enumerable.Empty<IVersionFilter>(),
+                    baseVersionStrategies ?? Enumerable.Empty<IBaseVersionStrategy>(),
+                    null,
                     tracksReleaseBranches, isRelease, commitDateFormat)
         {
         }

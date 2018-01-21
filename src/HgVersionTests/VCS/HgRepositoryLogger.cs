@@ -28,6 +28,8 @@ namespace HgVersionTests.VCS
             }
         }
 
+        public int? LogLimit { get => _repository.LogLimit; set => _repository.LogLimit = value; }
+
         public IEnumerable<ICommit> Log()
         {
             using (Logger.IndentLog($"Get log"))

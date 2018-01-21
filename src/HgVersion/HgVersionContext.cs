@@ -8,6 +8,9 @@ using VCSVersion.Helpers;
 using VCSVersion.SemanticVersions;
 using VCSVersion.VCS;
 using System.Linq;
+using VCSVersion.VersionCalculation.BaseVersionCalculation;
+using System.Collections.Generic;
+using HgVersion.VCS.BaseVersionCalculation;
 
 namespace HgVersion
 {
@@ -54,6 +57,11 @@ namespace HgVersion
             FullConfiguration = HgConfigurationProvider.Provide(repository, FileSystem);
             RepositoryMetadataProvider = new HgRepositoryMetadataProvider(repository, FullConfiguration);
             Configuration = CalculateEffectiveConfiguration();
+            repository.LogLimit = Configuration.LogLimit;
+
+            if (Configuration.LogLimit != null)
+                Logger.WriteInfo($"Applying log limit of {Configuration.LogLimit}, which may cause incorrect version calculation.");
+
             CurrentCommitTaggedVersion = CalculateCurrentCommitTaggedVersion();
             IsCurrentCommitTagged = CurrentCommitTaggedVersion != null;
         }
@@ -118,9 +126,43 @@ namespace HgVersion
                 FullConfiguration.BuildMetaDataPadding.Value,
                 FullConfiguration.CommitsSinceVersionSourcePadding.Value,
                 FullConfiguration.Ignore.ToFilters(),
+                GetBaseVersionStrategies(),
+                FullConfiguration.LogLimit,
                 currentBranchConfig.TracksReleaseBranches.Value,
                 currentBranchConfig.IsReleaseBranch.Value,
                 commitDateFormat);
+        }
+
+        private IEnumerable<IBaseVersionStrategy> GetBaseVersionStrategies()
+        {
+            var defaultStrategies = new List<IBaseVersionStrategy>
+                {
+                    new FallbackBaseVersionStrategy(),
+                    new TaggedCommitVersionStrategy(),
+                    new MergeMessageBaseVersionStrategy()
+                };
+
+            var values = FullConfiguration.BaseVersionStrategies;
+            if (values == null || values.Count() == 0)
+            {
+                return defaultStrategies;
+            }
+
+            var strategies = new List<IBaseVersionStrategy>();
+            foreach(var strategyName in values)
+            {
+                if (strategyName.Equals("Default", StringComparison.OrdinalIgnoreCase))
+                    strategies.Concat(defaultStrategies);
+
+                if (_strategiesMapping.TryGetValue(strategyName, out var strategy))
+                    strategies.Add(strategy);
+                else
+                {
+                    Logger.WriteWarning($"Unknown base version calculation strategy: {strategyName}.");
+                }
+            }
+
+            return strategies;
         }
 
         private SemanticVersion CalculateCurrentCommitTaggedVersion()
@@ -135,6 +177,30 @@ namespace HgVersion
                     return new SemanticVersion[0];
                 })
                 .Max();
+        }
+
+        private Dictionary<string, IBaseVersionStrategy> _strategiesMapping = 
+            new Dictionary<string, IBaseVersionStrategy>(new Comparer())
+        {
+            { "FallbackBase", new FallbackBaseVersionStrategy() },
+            { "TaggedCommit",  new TaggedCommitVersionStrategy() },
+            { "MergeMessage",  new MergeMessageBaseVersionStrategy() },
+            { "FastTaggedCommit",  new FastTaggedCommitVersionStrategy() },
+            { "FastMergeMessage",  new FastMergeMessageBaseVersionStrategy() },
+
+        };
+
+        private class Comparer : IEqualityComparer<string>
+        {
+            public bool Equals(string x, string y)
+            {
+                return x.Equals(x, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public int GetHashCode(string obj)
+            {
+                return obj.GetHashCode();
+            }
         }
     }
 }

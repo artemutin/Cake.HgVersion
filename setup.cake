@@ -11,6 +11,8 @@ BuildParameters.SetParameters(
     repositoryName: "Cake.HgVersion",
     appVeyorAccountName: "vCipher",
     shouldRunCodecov: false,
+    shouldRunDupFinder: false,
+    shouldRunInspectCode: false,
     solutionFilePath: "./src/Cake.HgVersion.sln");
 
 BuildParameters.PrintParameters(Context);

@@ -37,5 +37,10 @@ namespace HgVersion.VCS
         /// </summary>
         /// <param name="rev">Revision to update</param>
         void Update(RevSpec rev);
+
+        /// <summary>
+        /// Limit to log requests, useful for large repositories without semver tagging
+        /// </summary>
+        int? LogLimit { get; set; }
     }
 }

@@ -24,12 +24,27 @@ namespace HgVersion.VCS
         /// <inheritdoc />
         public string Path => _repository.Path;
 
+        public int? LogLimit { get; set; }
+
         /// <inheritdoc />
         public IEnumerable<ICommit> Log()
         {
-            return _repository
+            if (LogLimit == null)
+            {
+                return _repository
                 .Log()
-                .Select(changeset => (HgCommit) changeset);
+                .Select(changeset => (HgCommit)changeset);
+            }
+            else
+            {
+                return _repository
+                .Log(new LogCommand()
+                    .WithAdditionalArgument("--limit")
+                    .WithAdditionalArgument($"{LogLimit}")
+                    )
+                .Select(changeset => (HgCommit)changeset);
+            }
+            
         }
 
         /// <inheritdoc />
@@ -41,9 +56,21 @@ namespace HgVersion.VCS
             if (!(query is HgLogQuery hgQuery))
                 throw new InvalidOperationException($"{query.GetType()} is not supported.");
 
+            LogCommand logCommand;
+            if (LogLimit == null)
+            {
+                logCommand = new LogCommand()
+                    .WithRevision(hgQuery.Revision);
+            }
+            else
+            {
+                logCommand = new LogCommand()
+                    .WithRevision(hgQuery.Revision)
+                    .WithAdditionalArgument("--limit")
+                    .WithAdditionalArgument($"{LogLimit}");
+            }
             return _repository
-                .Log(new LogCommand()
-                    .WithRevision(hgQuery.Revision))
+                .Log(logCommand)
                 .Select(changeset => (HgCommit) changeset);
         }
 
@@ -116,11 +143,15 @@ namespace HgVersion.VCS
         /// <inheritdoc />
         public IEnumerable<ITag> Tags()
         {
-            return _repository
-                .Tags()
-                .Select(tag => new HgTag(
-                    tag.Name,
-                    () => GetCommit(tag.RevisionNumber)));
+            
+            var linq =  _repository
+            .Tags()
+            .Select(tag => new HgTag(
+                tag.Name,
+                () => GetCommit(tag.RevisionNumber)));
+
+            return LogLimit != null ? linq.Take((int)LogLimit) : linq;
+            
         }
 
         /// <inheritdoc />
@@ -197,5 +228,6 @@ namespace HgVersion.VCS
         /// <returns></returns>
         public static implicit operator HgRepository(Repository repository) =>
             new HgRepository(repository);
+
     }
 }

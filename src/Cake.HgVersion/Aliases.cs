@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Cake.Core;
 using Cake.Core.Annotations;
 using Cake.Core.IO;
@@ -9,6 +10,7 @@ using Mercurial;
 using VCSVersion;
 using VCSVersion.Output;
 using VCSVersion.SemanticVersions;
+using VCSVersion.VersionCalculation.BaseVersionCalculation;
 
 namespace Cake.HgVersion
 {
@@ -49,7 +51,11 @@ namespace Cake.HgVersion
             {
                 var versionContext = new HgVersionContext((HgRepository)repository);
 
-                var finder = new VersionFinder();
+                var finder = new VersionFinder(
+                    new BaseVersionCalculator(
+                        versionContext.Configuration.BaseVersionStrategies.ToArray()
+                        )
+                    );
                 var version = finder.FindVersion(versionContext);
                 var variables = version.ToVersionVariables(versionContext);
             

@@ -44,8 +44,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="VCSVersion, Version=0.1.5.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\VCSVersion.0.1.5\lib\net461\VCSVersion.dll</HintPath>
+    <Reference Include="VCSVersion, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\VCSVersion\src\VCSVersion\bin\Debug\net461\VCSVersion.dll</HintPath>
     </Reference>
     <Reference Include="YamlDotNet, Version=4.2.3.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\YamlDotNet.4.2.3\lib\net35\YamlDotNet.dll</HintPath>
@@ -60,6 +61,8 @@
     <Compile Include="Templating\InvalidTemplatePathException.cs" />
     <Compile Include="Templating\TemplateManager.cs" />
     <Compile Include="Templating\TemplateType.cs" />
+    <Compile Include="VCS\BaseVersionCalculation\MergeMessageBaseVersionStrategy.cs" />
+    <Compile Include="VCS\BaseVersionCalculation\TaggedCommitVersionStrategy.cs" />
     <Compile Include="VCS\HgBranchHead.cs" />
     <Compile Include="VCS\HgCommit.cs" />
     <Compile Include="VCS\HgLogQuery.cs" />
